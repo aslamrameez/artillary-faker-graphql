@@ -1,0 +1,22 @@
+{
+  "name": "artillary-faker-graphql",
+  "version": "1.0.0",
+  "description": "artillary graphql reuest using with genreate data",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/aslamrameez/artillary-faker-graphql.git"
+  },
+  "keywords": [
+    "artillary"
+  ],
+  "author": "aslam",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/aslamrameez/artillary-faker-graphql/issues"
+  },
+  "homepage": "https://github.com/aslamrameez/artillary-faker-graphql#readme"
+}
