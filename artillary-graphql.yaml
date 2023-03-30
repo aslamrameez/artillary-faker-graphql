@@ -1,0 +1,323 @@
+config:
+  target: 'url'
+  processor: "random-data.js"
+  phases:
+    - duration: 60
+      arrivalRate: 2
+      rampTo: 20
+    - duration: 60
+      arrivalRate: 10
+      rampTo: 50
+    - duration: 30
+      arrivalRate: 20
+      rampTo: 100
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 300
+    - duration: 60
+      arrivalRate: 50
+      rampTo: 500
+    - duration: 60
+      arrivalRate: 100
+      rampTo: 999
+  defaults:
+    headers:
+      x-api-key: 'token'
+
+scenarios:
+  - name: 'Create and fetch search Transaction'
+    flow:
+      - function: "generateRandomPayload"
+      - post:
+          url: '/'
+          json:
+            query: |
+              query SearchTransactions($limit: Int, $cardType: [String], $transactionState: [String], $offset: Int, $fromDate: String, $toDate: String, $macAddress: String, $checkNumber: String, $restaurantCode: String, $paymentId: String, $nextToken: String) {
+                        searchTransactions(
+                          limit: $limit
+                          cardType: $cardType
+                          transactionState: $transactionState
+                          offset: $offset
+                          fromDate: $fromDate
+                          toDate: $toDate
+                          macAddress: $macAddress
+                          checkNumber: $checkNumber
+                          restaurantCode: $restaurantCode
+                          paymentId: $paymentId
+                          nextToken: $nextToken
+                        ) {
+                          transaction {
+                            m_pos_timestamp
+                            m_check_number
+                            m_card_brand
+                            m_approved_amount
+                            error_message
+                            error_code
+                            payment_id
+                            mac_address
+                            restaurant_code
+                            restaurant_brand
+                          }
+                          nextToken
+                          count
+                        }
+                      }
+            variables:
+              limit: '50'
+              cardType: []
+              transactionState: []
+              offset: 0
+              fromDate: {{fromDate}}
+              toDate: {{toDate}}
+
+  - name: 'Fetch Payments Overview'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query PaymentOverview($from_date: String, $to_date: String, $type: String, $restaurant_code: [String], $total_days: Int) {
+                      paymentOverview(
+                            from_date: $from_date
+                            to_date: $to_date
+                            type: $type
+                            restaurant_code: $restaurant_code
+                            total_days: $total_days
+                       ) {
+                            status
+                            message
+                            result {
+                              type
+                              data {
+                                item
+                                count
+                                date_range
+                              }
+                          }
+                        }
+                }
+            variables:
+              type: 'OVERVIEW_DASHBOARD'
+              total_days: 7
+
+
+  - name: 'Fetch name of restaurants on onChange-event in search Field'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query LookupRestaurantCode($pattern: String) {
+                lookupRestaurantCode(pattern: $pattern) {
+                  statusCode
+                  restaurant {
+                    restaurant_code
+                    boh_mac_address
+                    store_email
+                    store_hours
+                    brand
+                    store_id
+                    street
+                    city
+                    state
+                    zip
+                  }
+                }
+              }
+            variables:
+              pattern: 'a'
+
+  - name: 'Fetch Data of restaurants on searching - 1'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query GetS3ObjectContentAsJSON($bucket: String!, $key: String!) {
+                getS3ObjectContentAsJSON(bucket: $bucket, key: $key) {
+                  statusCode
+                  data
+                }
+              }
+            variables:
+              bucket: 'upsell-variables-staging'
+              key: 'applebees_aberdeen_9990/upsell_variables.json'
+
+  - name: 'Fetch Data of restaurants on searching - 2'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query MyQuery {
+                getMenu(restaurantCode: \"applebees_aberdeen_9990\") {
+                  statusCode
+                  menuItems {
+                    id
+                    name
+                  }
+                  modifierGroups {
+                    id
+                    name
+                  }
+                }
+              }
+
+  - name: 'Fetch Data for Home Page'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query listNotification($startDt: String, $endDt: String, $limit: Int, $email: String) {
+                listNotifications(
+                  filter: {createdOn: {between: [$startDt, $endDt]}, email: {eq: $email}}
+                  limit: $limit
+                  ) {
+                  items {
+                          sql
+                          text
+                          createdOn
+                          url
+                          error_message
+                          size
+                        }
+                }
+              }
+            variables:
+              startDt: '2023-03-09T12:05:30.180Z'
+              endDt: '2023-03-15T12:05:30.180Z'
+              limit: 10
+              email: 'aashapure@presto.com'
+  - name: 'Search Device'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query SearchDevice($request_type: String, $mac_address: String, $store_id: String, $brand_name: String) {
+                    searchDevice(
+                    request_type: $request_type
+                    mac_address: $mac_address
+                    store_id: $store_id
+                    brand_name: $brand_name
+                    ) {
+                    statusCode
+                    devices {
+                    store_id
+                    zip
+                    manufacturer_hardened
+                    restaurant_code
+                    account_owner
+                    account_type
+                    store_status
+                    web_site
+                    store_hours
+                    store_email
+                    installed_devices
+                    installed_products
+                    pos_type
+                    wifi_ssid
+                    wifi_router_type
+                    proxy_ip
+                    city
+                    field_hardened
+                    serial_number
+                    device_type
+                    term_id
+                    warehouse
+                    manufacturer
+                    hardware_type
+                    phone
+                    mac_address
+                    street
+                    warehouse_hardened
+                    account_name
+                    model
+                    installed_on
+                    id
+                    state
+                    brand
+                    diagnosis_notes
+                  }
+                  }
+                  }
+
+            variables:
+              mac_address: '00:12:4E:25:E4:73'
+              request_type: 'HARDWARE_INVENTORY'
+
+  - name: 'Get Transaction Details'
+    flow:
+      - post:
+          url: '/'
+          json:
+            query: |
+              query GetTransactionById($paymentId: String) {
+                    getTransactionById(paymentId: $paymentId) {
+                      id
+                      url
+                      restaurant_code
+                      restaurant_brand
+                      amount_requested
+                      cancelled
+                      card_data_presented
+                      complete
+                      for_voiding
+                      error_exception_code
+                      error_code
+                      error_message
+                      transaction_state
+                      started_with_posmon
+                      payment_id
+                      m_transaction_amount
+                      m_tip_amount
+                      m_cash_back_amount
+                      m_check_number
+                      m_pos_transaction_id
+                      m_gateway_response_code
+                      m_gateway_transaction_id
+                      m_retrieval_reference_number
+                      m_approval_code
+                      m_approved_amount
+                      m_transaction_id
+                      m_transaction_date
+                      m_transaction_time
+                      m_currency_code
+                      m_masked_pan
+                      m_signature_required
+                      m_pin_entry_result
+                      m_cardholder_verification_method
+                      m_card_entry_method
+                      m_cardholder_name
+                      m_card_brand
+                      m_tender_type
+                      m_gateway_response_message
+                      mac_address
+                      tableid
+                      waiterid
+                      sessionid
+                      splittype
+                      load_date
+                      m_pos_timestamp
+                      m_aid
+                      m_application_preferred_name
+                      response_cryptogram
+                      m_employee_id
+                      card_type
+                      candidate_list
+                      receipt_data
+                      m_expiry_date
+                      m_gateway_token
+                      guest_millis
+                      full_time_millis
+                      tax
+                      balance
+                      transaction_type
+                  }
+                  }
+
+            variables:
+              paymentId: '701463c9-838d-4dfa-9d45-7406107c93c3'
+
+

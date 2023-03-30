@@ -2,9 +2,11 @@
   "name": "artillary-faker-graphql",
   "version": "1.0.0",
   "description": "artillary graphql reuest using with genreate data",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "endurance:qa": "$(npm bin)/artillery run -e qa artillary-graphql.yaml -o endurance-tests.json ; $(npm bin)/artillery report endurance-tests.json",
+    "endurance:dev": "$(npm bin)/artillery run -e dev artillary-graphql.yaml-o endurance-tests.json ; $(npm bin)/artillery report endurance-tests.json",
+    "load:dev": "$(npm bin)/artillery run -e dev artillary-graphql.yaml -o load-tests.json ; $(npm bin)/artillery report load-tests.json",
+    "endurance:jenkins:qa": "$(npm bin)/artillery run -e qa artillary-graphql.yaml -o endurance-tests.json ; $(npm bin)/artillery report endurance-tests.json; cat endurance-tests.json.html"
   },
   "repository": {
     "type": "git",
@@ -18,5 +20,11 @@
   "bugs": {
     "url": "https://github.com/aslamrameez/artillary-faker-graphql/issues"
   },
-  "homepage": "https://github.com/aslamrameez/artillary-faker-graphql#readme"
+  "homepage": "https://github.com/aslamrameez/artillary-faker-graphql#readme",
+  "dependencies": {
+    "artillery": "^2.0.0-30"
+  },
+  "devDependencies": {
+    "faker": "^4.1.0"
+  }
 }
